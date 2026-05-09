@@ -21,12 +21,11 @@
 /* Minimum sample time in nanoseconds */
 #define CPU_MIN_SAMPLE_NS (100 * NSEC_PER_USEC)
 
-/* Max frequencies for SM8550 (kHz) */
+/* Max frequencies for SM8750 (kHz) */
 static const u64 max_freqs[] = {
-	2265600, 2265600,                    /* Cores 0-1 (Silver/LITTLE) */
-	3148800, 3148800, 3148800,           /* Cores 2-4 (Gold/Big) */
-	2956800, 2956800,                    /* Cores 5-6 (Gold+/Big) */
-	3302400                              /* Core 7 (Prime) */
+	3532800, 3532800, 3532800,           /* Cores 0-5 (PERFORMANCE) */
+	3532800, 3532800, 3532800,
+	4320000, 4320000                     /* Core 6-7 (Prime) */
 };
 
 /*
