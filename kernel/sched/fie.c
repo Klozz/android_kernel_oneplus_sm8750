@@ -406,19 +406,28 @@ asm volatile("ldp %[v1], %[v2], %[v]"				\
  * pmu_put_cur_writer() always puts the writer's pmu_stat back into the newest
  * pmu_stat slot, since it always has the newest data.
  */
+/*
+ * Helpers updated for Kernel 6.6 using the 128-bit atomic API.
+ * The two 64-bit pointers are cast to a 128-bit integer (u128).
+ */
 #define __PMU_CMPXCHG_DBL_LOOP(new1_expr, new2_expr) \
 struct pmu_stat *old1, *old2, *new1, *new2;			\
+u128 old_val, new_val;						\
 do {								\
 	pmu_read_cur_ptrs(pmu, old1, old2);			\
-	new1 = (new1_expr), new2 = (new2_expr);			\
-} while (!cmpxchg_double_local(&pmu->cur_ptr[0],		\
-&pmu->cur_ptr[1],		\
-old1, old2, new1, new2))
+	/* We pack the two 64-bit pointers into a u128 */ \
+	old_val = ((u128)(unsigned long)old2 << 64) | (unsigned long)old1; \
+	new1 = (new1_expr);					\
+	new2 = (new2_expr);					\
+	new_val = ((u128)(unsigned long)new2 << 64) | (unsigned long)new1; \
+} while (!try_cmpxchg128_local((u128 *)pmu->cur_ptr, &old_val, new_val))
+
 #define pmu_get_cur_writer(pmu) \
 ({									\
 	__PMU_CMPXCHG_DBL_LOOP(old2 ? old1 : NULL, NULL);		\
 	old2 ? old2 : old1;						\
 })
+
 #define pmu_put_cur_writer(pmu, cur) \
 ({									\
 	__PMU_CMPXCHG_DBL_LOOP(cur, old1 ? old1 : old2);		\
