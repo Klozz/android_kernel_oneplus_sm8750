@@ -23,6 +23,7 @@
 struct cpufreq_cdev_device {
 	struct list_head node;
 	struct thermal_cooling_device *cdev;
+	struct device_node *np;
 	int cpu;
 	unsigned long cur_state;
 	unsigned long max_state;
@@ -144,8 +145,8 @@ static void cpufreq_cdev_register(struct work_struct *work)
 	freq_qos_add_request(&policy->constraints,
 			   &cdev_data->qos_max_freq_req, FREQ_QOS_MAX,
 			   state_to_cpufreq(cdev_data, 0));
-	cdev_data->cdev = thermal_cooling_device_register(cdev_data->cdev_name,
-						cdev_data, &cpufreq_cdev_ops);
+	cdev_data->cdev = thermal_of_cooling_device_register(cdev_data->np,
+					cdev_data->cdev_name, cdev_data, &cpufreq_cdev_ops);
 	if (IS_ERR(cdev_data->cdev)) {
 		pr_err("Cdev register failed for %s, ret:%ld\n",
 			cdev_data->cdev_name, PTR_ERR(cdev_data->cdev));
@@ -213,6 +214,7 @@ static int cpufreq_cdev_probe(struct platform_device *pdev)
 			return -ENOMEM;
 		}
 		cdev_data->cpu = cpu;
+		cdev_data->np = subsys_np;
 		cdev_data->retry_cnt = MAX_RETRY_CNT;
 		snprintf(cdev_data->cdev_name, THERMAL_NAME_LENGTH,
 				subsys_np->name);
