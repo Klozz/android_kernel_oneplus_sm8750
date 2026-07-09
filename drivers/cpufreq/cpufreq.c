@@ -456,9 +456,10 @@ void cpufreq_freq_transition_end(struct cpufreq_policy *policy,
 
 	cpufreq_notify_post_transition(policy, freqs, transition_failed);
 
-	arch_set_freq_scale(policy->related_cpus,
-			    policy->cur,
-			    arch_scale_freq_ref(policy->cpu));
+	if (!topology_scale_freq_counters_active())
+		arch_set_freq_scale(policy->related_cpus,
+					policy->cur,
+					arch_scale_freq_ref(policy->cpu));
 
 	spin_lock(&policy->transition_lock);
 	policy->transition_ongoing = false;
@@ -2207,8 +2208,10 @@ unsigned int cpufreq_driver_fast_switch(struct cpufreq_policy *policy,
 		return 0;
 
 	policy->cur = freq;
-	arch_set_freq_scale(policy->related_cpus, freq,
-			    arch_scale_freq_ref(policy->cpu));
+	/* Skip frequency scale updates when FIE is active */
+	if (!topology_scale_freq_counters_active())
+		arch_set_freq_scale(policy->related_cpus, freq,
+					arch_scale_freq_ref(policy->cpu));
 	cpufreq_stats_record_transition(policy, freq);
 	cpufreq_times_record_transition(policy, freq);
 	trace_android_rvh_cpufreq_transition(policy);
