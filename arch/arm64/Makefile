@@ -44,6 +44,9 @@ KBUILD_AFLAGS	+= $(compat_vdso)
 KBUILD_CFLAGS	+= $(call cc-option,-mabi=lp64)
 KBUILD_AFLAGS	+= $(call cc-option,-mabi=lp64)
 
+# Tune pipeline scheduling for Qualcomm Oryon cores (Snapdragon 8 Elite / SM8750)
+KBUILD_CFLAGS	+= $(call cc-option,-mtune=oryon-1,$(call cc-option,-mtune=cortex-x4))
+
 # Avoid generating .eh_frame* sections.
 ifneq ($(CONFIG_UNWIND_TABLES),y)
 KBUILD_CFLAGS	+= -fno-asynchronous-unwind-tables -fno-unwind-tables
