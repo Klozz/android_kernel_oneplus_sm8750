@@ -45,7 +45,16 @@ KBUILD_CFLAGS	+= $(call cc-option,-mabi=lp64)
 KBUILD_AFLAGS	+= $(call cc-option,-mabi=lp64)
 
 # Tune pipeline scheduling for Qualcomm Oryon cores (Snapdragon 8 Elite / SM8750)
+# NOTE: LLVM's oryon-1 machine model in Clang 24 git has incomplete write definitions
+# for LDPXi / LDRBBpost, triggering assertion failures in builds with assertions.
+# Fall back to cortex-x4 for Yuki Clang 24 until upstream LLVM fixes the oryon-1 model.
+ifneq ($(findstring Yuki,$(CONFIG_CC_VERSION_TEXT)),)
+KBUILD_CFLAGS	+= $(call cc-option,-mtune=cortex-x4)
+else ifeq ($(CONFIG_CLANG_VERSION),240000)
+KBUILD_CFLAGS	+= $(call cc-option,-mtune=cortex-x4)
+else
 KBUILD_CFLAGS	+= $(call cc-option,-mtune=oryon-1,$(call cc-option,-mtune=cortex-x4))
+endif
 
 # Avoid generating .eh_frame* sections.
 ifneq ($(CONFIG_UNWIND_TABLES),y)
