@@ -312,12 +312,11 @@ fie_amu_const_read(struct pmu_stat *stat)
 {
 	register u64 cntpct, const_cyc, cpu_cyc;
 
-	asm volatile("isb\n\t"
-	"mrs %0, cntpct_el0\n\t"
-	"mrs %1, amevcntr01_el0\n\t"
-	"mrs %2, amevcntr00_el0\n\t"
-	"isb"
-	: "=r" (cntpct), "=r" (const_cyc), "=r" (cpu_cyc));
+	isb();
+	cntpct = read_sysreg(cntpct_el0);
+	const_cyc = read_sysreg_s(SYS_AMEVCNTR0_CONST_EL0);
+	cpu_cyc = read_sysreg_s(SYS_AMEVCNTR0_CORE_EL0);
+	isb();
 
 	*stat = (typeof(*stat)){ cntpct, const_cyc, cpu_cyc };
 }
@@ -327,11 +326,10 @@ fie_amu_read(struct pmu_stat *stat)
 {
 	register u64 cntpct, cpu_cyc;
 
-	asm volatile("isb\n\t"
-	"mrs %0, cntpct_el0\n\t"
-	"mrs %1, amevcntr00_el0\n\t"
-	"isb"
-	: "=r" (cntpct), "=r" (cpu_cyc));
+	isb();
+	cntpct = read_sysreg(cntpct_el0);
+	cpu_cyc = read_sysreg_s(SYS_AMEVCNTR0_CORE_EL0);
+	isb();
 
 	*stat = (typeof(*stat)){ cntpct, cntpct, cpu_cyc };
 }
